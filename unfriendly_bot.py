@@ -9,10 +9,10 @@ import random
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-updater = Updater(token=pickle.load(open("./secur/token", "rb")))
+updater = Updater(token=pickle.load(open("./secure/token", "rb")))
 
-my_chat_id = pickle.load(open("./secur/my_chat_id", "rb"))
-tasks = pickle.load(open("./secur/tasks", "rb"))
+my_chat_id = pickle.load(open("./secure/my_chat_id", "rb"))
+tasks = pickle.load(open("./secure/tasks", "rb"))
 greet_phrases = pickle.load(open("./data/greet_phrases", "rb"))
 greet_questions = pickle.load(open("./data/greet_question", "rb"))
 nothing_was_done_reply = pickle.load(open("./data/nothing_was_done", "rb"))
