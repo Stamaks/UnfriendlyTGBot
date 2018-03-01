@@ -62,14 +62,16 @@ def echo(bot, update):
 
 def show_keyboard(bot, update):
     if len(tasks) == 0:
-        key_buttons = [InlineKeyboardButton(text="Добавить", callback_data=str(-1))]
+        key_buttons = [InlineKeyboardButton(text="Добавить\n", callback_data=str(-1))]
         keyboard = InlineKeyboardMarkup([key_buttons])
         bot.send_message(chat_id=update.message.chat_id, text="Упс, ты молодец, у тебя нет задач :)", reply_markup=keyboard)
     else:
         key_buttons = []
         for i in range(len(tasks)):
             key_buttons.append(InlineKeyboardButton(text=str(i+1) + ". " + tasks[i], callback_data=str(i)))
-        keyboard = InlineKeyboardMarkup([key_buttons])
+        key_buttons.append(InlineKeyboardButton(text="Добавить\n", callback_data=str(-1)))
+        a = InlineKeyboardButton(text="Добавить\n", callback_data=str(-1));
+        keyboard = InlineKeyboardMarkup([[key_buttons[0], key_buttons[1], a]])
         bot.send_message(chat_id=update.message.chat_id, text="Лови список задач!", reply_markup=keyboard)
 
 
@@ -77,16 +79,18 @@ def callback_query(bot, update):
     global add_task
 
     if int(update.callback_query.data) >= 0:
-        key_buttons = [InlineKeyboardButton(text="Случайно тыкнула!", callback_data=str(-2)),
-                       InlineKeyboardButton(text="Сделала :)", callback_data=str(-3)),
-                       InlineKeyboardButton(text="Просто удали", callback_data=str(-4))]
+        key_buttons = [InlineKeyboardButton(text="Случайно тыкнула!\n", callback_data=str(-2)),
+                       InlineKeyboardButton(text="Сделала :)\n", callback_data=str(-3)),
+                       InlineKeyboardButton(text="Просто удали\n", callback_data=str(-4))]
         keyboard = InlineKeyboardMarkup([key_buttons])
-        bot.send_message(chat_id=update.message.chat_id, text="ere", reply_markup=keyboard)        
+        bot.send_message(chat_id=my_chat_id, text="sd", reply_markup=keyboard)
     elif int(update.callback_query.data) == -1:
         add_task = 1
-    bot.send_message(chat_id=my_chat_id, text=update.callback_query.data)
-    bot.edit_message_text(text="JKJKJK", chat_id=update.callback_query.message.chat_id, 
-                             message_id=update.callback_query.message.message_id)
+        bot.send_message(chat_id=my_chat_id, text="Какая задача?")
+
+    # bot.send_message(chat_id=my_chat_id, text=update.callback_query.data)
+    # bot.edit_message_text(text="JKJKJK", chat_id=update.callback_query.message.chat_id,
+    #                       message_id=update.callback_query.message.message_id)
 
 
 def main():
