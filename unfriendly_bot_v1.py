@@ -19,7 +19,9 @@ did_well_reply = pickle.load(open("./data/did_well", "rb"))
 
 is_previous_message_greet_question = False
 add_task = False
+delete_task_id = 0
 
+# TODO: command swap to swap tasks
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -90,6 +92,8 @@ def echo_all(message):
 
 @bot.callback_query_handler(func=lambda call: int(call.data) >= 0) # If task button was presses
 def test_callback(call):
+    global delete_task_id
+
     markup = types.InlineKeyboardMarkup(row_width=3)
     button1 = types.InlineKeyboardButton("Сделала!", callback_data="-3")
     button2 = types.InlineKeyboardButton("Я случайно", callback_data="-4")
@@ -97,6 +101,7 @@ def test_callback(call):
     markup.add(button1, button2, button3)
     bot.edit_message_text("Задача №" + str(int(call.data) + 1),
                           chat_id=my_chat_id, message_id=call.message.message_id, reply_markup=markup)
+    delete_task_id = int(call.data) # In case user presses "delete" the next step
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "-1") # If add button was pressed
@@ -105,6 +110,17 @@ def test_callback(call):
 
     bot.send_message(my_chat_id, "Какая задача?")
     add_task = True
+
+@bot.callback_query_handler(func=lambda call: call.data == "-2") # If delete button was pressed
+def test_callback(call):
+    global tasks
+
+    bot.send_message(my_chat_id, "Удалил " + tasks[delete_task_id])
+    tasks.remove(tasks[delete_task_id])
+    show_list(call.message)
+
+    pickle.dump(tasks, open("./secure/tasks", "wb"))
+
 
 
 def main():
