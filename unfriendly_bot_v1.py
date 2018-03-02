@@ -43,7 +43,7 @@ def show_list(message):
     markup = types.InlineKeyboardMarkup(row_width=1)
     for i in range(len(tasks)):
         markup.add(types.InlineKeyboardButton(str(i+1) + ". " + tasks[i], callback_data=str(i)))
-    markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="add_button_pressed"))
+    markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="-1"))
 
     if len(tasks) == 0:
         text = "Упс, ты молодец, у тебя нет задач :)"
@@ -58,12 +58,12 @@ def show_list(message):
 def echo_all(message):
     global add_task, is_previous_message_greet_question
 
-    if add_task == 1:
+    if add_task:
         # add the task
         tasks.append(message.text)
         bot.send_message(my_chat_id, "Добавил " + message.text)
 
-        # TODO: add task keyboard open
+        show_list(message)
 
         add_task = 0
     elif is_previous_message_greet_question:
@@ -87,12 +87,20 @@ def echo_all(message):
 @bot.callback_query_handler(func=lambda call: int(call.data) >= 0)
 def test_callback(call):
     markup = types.InlineKeyboardMarkup(row_width=3)
-    button1 = types.InlineKeyboardButton("Сделала!", callback_data="task_done_button_pressed")
-    button2 = types.InlineKeyboardButton("Я случайно", callback_data="occas_button_pressed")
-    button3 = types.InlineKeyboardButton("Удали!", callback_data="delete_task_button_pressed")
+    button1 = types.InlineKeyboardButton("Сделала!", callback_data="-3")
+    button2 = types.InlineKeyboardButton("Я случайно", callback_data="-4")
+    button3 = types.InlineKeyboardButton("Удали!", callback_data="-2")
     markup.add(button1, button2, button3)
     bot.edit_message_text("Задача №" + str(int(call.data) + 1),
                           chat_id=my_chat_id, message_id=call.message.message_id, reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "-1")
+def test_callback(call):
+    global add_task
+
+    bot.send_message(my_chat_id, "Какая задача?")
+    add_task = True
 
 
 def main():
