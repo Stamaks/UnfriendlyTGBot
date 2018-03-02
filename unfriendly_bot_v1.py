@@ -91,7 +91,7 @@ def echo_all(message):
 
 
 @bot.callback_query_handler(func=lambda call: int(call.data) >= 0) # If task button was presses
-def test_callback(call):
+def task_callback(call):
     global delete_task_id
 
     markup = types.InlineKeyboardMarkup(row_width=3)
@@ -105,14 +105,15 @@ def test_callback(call):
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "-1") # If add button was pressed
-def test_callback(call):
+def add_callback(call):
     global add_task
 
     bot.send_message(my_chat_id, "Какая задача?")
     add_task = True
 
+
 @bot.callback_query_handler(func=lambda call: call.data == "-2") # If delete button was pressed
-def test_callback(call):
+def remove_callback(call):
     global tasks
 
     bot.send_message(my_chat_id, "Удалил " + tasks[delete_task_id])
@@ -122,6 +123,16 @@ def test_callback(call):
     pickle.dump(tasks, open("./secure/tasks", "wb"))
 
 
+@bot.callback_query_handler(func=lambda call: call.data == "-3") # If done button was pressed
+def done_callback(call):
+    bot.send_message(my_chat_id, random.choice(did_well_reply)) # Say sth nice
+
+    remove_callback(call) # Delete the task
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "-4") # If occas button was pressed
+def test_callback(call):
+    show_list(call.message)
 
 def main():
     bot.polling()
