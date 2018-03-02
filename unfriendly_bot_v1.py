@@ -17,8 +17,8 @@ nothing_was_done_reply = pickle.load(open("./data/nothing_was_done", "rb"))
 sth_was_done_reply = pickle.load(open("./data/sth_was_done", "rb"))
 did_well_reply = pickle.load(open("./data/did_well", "rb"))
 
-is_previous_message_greet_question = 0
-add_task = 0
+is_previous_message_greet_question = False
+add_task = False
 
 
 @bot.message_handler(commands=['start'])
@@ -34,7 +34,23 @@ def send_welcome(message):
     bot.send_message(my_chat_id, greet_question)
 
     # the question was asked
-    is_previous_message_greet_question = 1
+    is_previous_message_greet_question = True
+
+
+@bot.message_handler(commands=['list'])
+def show_list(message):
+    # Building keyboard with tasks
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    for i in range(len(tasks)):
+        markup.add(types.InlineKeyboardButton(str(i+1) + ". " + tasks[i], callback_data=str(i)))
+    markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="add_button_pressed"))
+
+    if len(tasks) == 0:
+        text = "Упс, ты молодец, у тебя нет задач :)"
+    else:
+        text = "Лови список задач!"
+    bot.send_message(my_chat_id, text, reply_markup=markup)
+
 
 
 # reply to every phrase
@@ -62,41 +78,21 @@ def echo_all(message):
 
         # send the answer
         bot.send_message(my_chat_id, text)
-        is_previous_message_greet_question = 0
+        is_previous_message_greet_question = False
     else:
         bot.send_message(my_chat_id, "Ничонипонял")
-        show_keyboard()
+        show_list(message) # show task list
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "1")
+@bot.callback_query_handler(func=lambda call: int(call.data) >= 0)
 def test_callback(call):
-   pass
-
-
-
-@bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
-def test_chosen(chosen_inline_result):
-    # Process all chosen_inline_result.
-    pass
-
-
-@bot.inline_handler(lambda query: query.query == 1)
-def query_text(inline_query):
-    # try:
-    #     r = types.InlineQueryResultArticle('1', 'Result', types.InputTextMessageContent('Result message.'))
-    #     r2 = types.InlineQueryResultArticle('2', 'Result2', types.InputTextMessageContent('Result message2.'))
-    #     bot.answer_inline_query(inline_query.id, [r, r2])
-    # except Exception as e:
-    #     print(e)
-    print("aaaa")
-
-
-def show_keyboard():
-    markup = types.InlineKeyboardMarkup(row_width=1)
-    but1 = types.InlineKeyboardButton("1dgdgjdkjhkg", callback_data=1)
-    but2 = types.InlineKeyboardButton("1sfdsdsd", callback_data=2)
-    markup.add(but1, but2)
-    bot.send_message(my_chat_id, "text", reply_markup=markup)
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    button1 = types.InlineKeyboardButton("Сделала!", callback_data="task_done_button_pressed")
+    button2 = types.InlineKeyboardButton("Я случайно", callback_data="occas_button_pressed")
+    button3 = types.InlineKeyboardButton("Удали!", callback_data="delete_task_button_pressed")
+    markup.add(button1, button2, button3)
+    bot.edit_message_text("Задача №" + str(int(call.data) + 1),
+                          chat_id=my_chat_id, message_id=call.message.message_id, reply_markup=markup)
 
 
 def main():
