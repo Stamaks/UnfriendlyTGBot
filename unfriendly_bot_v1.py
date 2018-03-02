@@ -39,33 +39,36 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['list'])
 def show_list(message):
-    # Building keyboard with tasks
-    markup = types.InlineKeyboardMarkup(row_width=1)
+
+    markup = types.InlineKeyboardMarkup(row_width=1) # Building keyboard with tasks
     for i in range(len(tasks)):
         markup.add(types.InlineKeyboardButton(str(i+1) + ". " + tasks[i], callback_data=str(i)))
     markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="-1"))
 
-    if len(tasks) == 0:
+    if len(tasks) == 0: # Choosing text
         text = "Упс, ты молодец, у тебя нет задач :)"
     else:
         text = "Лови список задач!"
     bot.send_message(my_chat_id, text, reply_markup=markup)
 
 
-
-# reply to every phrase
-@bot.message_handler(func=lambda m: True)
+@bot.message_handler(func=lambda m: True) # reply to every phrase
 def echo_all(message):
     global add_task, is_previous_message_greet_question
 
     if add_task:
+
         # add the task
-        tasks.append(message.text)
-        bot.send_message(my_chat_id, "Добавил " + message.text)
+        if len(message.text) <= 10000 and len(tasks) <= 10000: # In case not to store big files
+            tasks.append(message.text)
+            bot.send_message(my_chat_id, "Добавил " + message.text)
+            show_list(message)
 
-        show_list(message)
+            add_task = 0
+            pickle.dump(tasks, open("./secure/tasks", "wb"))
+        else:
+            bot.send_message(my_chat_id, "Хорош меня дудосить :(")
 
-        add_task = 0
     elif is_previous_message_greet_question:
 
         # if it was a question, choose the answer
@@ -79,12 +82,13 @@ def echo_all(message):
         # send the answer
         bot.send_message(my_chat_id, text)
         is_previous_message_greet_question = False
+
     else:
         bot.send_message(my_chat_id, "Ничонипонял")
         show_list(message) # show task list
 
 
-@bot.callback_query_handler(func=lambda call: int(call.data) >= 0)
+@bot.callback_query_handler(func=lambda call: int(call.data) >= 0) # If task button was presses
 def test_callback(call):
     markup = types.InlineKeyboardMarkup(row_width=3)
     button1 = types.InlineKeyboardButton("Сделала!", callback_data="-3")
@@ -95,7 +99,7 @@ def test_callback(call):
                           chat_id=my_chat_id, message_id=call.message.message_id, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "-1")
+@bot.callback_query_handler(func=lambda call: call.data == "-1") # If add button was pressed
 def test_callback(call):
     global add_task
 
