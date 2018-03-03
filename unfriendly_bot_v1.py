@@ -44,14 +44,37 @@ def list_cammand_handler(message):
     show_list()
 
 @bot.message_handler(commands=['add'])
-def list_command_handler(message):
+def add_command_handler(message):
     text = message.text.strip()
     text = text.split("/add")
-    if (len(text) == 0):
+    if (text[1] == ""):
         prepare_to_add_a_task()
     else:
         add_task(text[1])
-    # bot.send_message(my_chat_id, message.text)
+
+
+@bot.message_handler(commands=['swap'])
+def swap_command_handler(message):
+    mes_text = message.text.strip()
+    mes_text = mes_text.split("/swap")
+    if (mes_text[1] == ""):
+        text = "Ничонипонял >< Введите два числа - номера задач."
+        # bot.send_message(my_chat_id, "Ничонипонял >< Введите два числа - номера задач.")
+    else:
+        find_numbers = mes_text.split(" ")
+        numbers = []
+        for num in find_numbers:
+            if string_is_number(num):
+                numbers.append(num)
+        if len(numbers) != 2:
+            text = "Ничонипонял >< Введите два числа - номера задач."
+        else:
+            if numbers[0] > 0 and numbers[0] <= len(tasks) and numbers[1] > 0 and numbers[1] <= len(tasks):
+                swap_two_tasks(numbers[0], numbers[1])
+                text = "Поменял местами " + str(numbers[0]) + " и " + str(numbers[1])
+            else:
+                text = "Некорректные номера"
+        bot.send_message(my_chat_id, text)
 
 
 @bot.message_handler(func=lambda m: True) # reply to every phrase
@@ -125,6 +148,7 @@ def done_callback(call):
 
     pickle.dump(tasks, open("./secure/tasks", "wb"))
 
+
 @bot.callback_query_handler(func=lambda call: call.data == "-4") # If occas button was pressed
 def test_callback(call):    
     show_list(should_edit_message=True, call=call)
@@ -173,6 +197,18 @@ def add_task(task, should_show_list=False):
         pickle.dump(tasks, open("./secure/tasks", "wb"))
     else:
         bot.send_message(my_chat_id, "Хорош меня дудосить :(")
+
+
+def swap_two_tasks(num1, num2):
+    pass
+
+
+def string_is_number(num):
+    try:
+        int(num)
+        return True
+    except ValueError:
+        return False
 
 
 def main():
