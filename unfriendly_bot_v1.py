@@ -18,7 +18,7 @@ sth_was_done_reply = pickle.load(open("./data/sth_was_done", "rb"))
 did_well_reply = pickle.load(open("./data/did_well", "rb"))
 
 is_previous_message_greet_question = False
-add_task = False
+should_add_task = False
 delete_task_id = 0
 
 # TODO: command swap to swap tasks
@@ -53,23 +53,23 @@ def show_list(message):
         text = "Лови список задач!"
     bot.send_message(my_chat_id, text, reply_markup=markup)
 
+@bot.message_handler(commands=['add'])
+def list_command_handler(message):
+    text = message.text.strip()
+    text = text.split("/add")
+    if (len(text) == 0):
+        prepare_to_add_a_task()
+    else:
+        add_task(text[1])
+    # bot.send_message(my_chat_id, message.text)
+
 
 @bot.message_handler(func=lambda m: True) # reply to every phrase
 def echo_all(message):
-    global add_task, is_previous_message_greet_question
+    global should_add_task, is_previous_message_greet_question
 
-    if add_task:
-
-        # add the task
-        if len(message.text) <= 10000 and len(tasks) <= 10000: # In case not to store big files
-            tasks.append(message.text)
-            bot.send_message(my_chat_id, "Добавил " + message.text)
-            show_list(message)
-
-            add_task = 0
-            pickle.dump(tasks, open("./secure/tasks", "wb"))
-        else:
-            bot.send_message(my_chat_id, "Хорош меня дудосить :(")
+    if should_add_task:
+        add_task(message.text)
 
     elif is_previous_message_greet_question:
 
@@ -106,10 +106,7 @@ def task_callback(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "-1") # If add button was pressed
 def add_callback(call):
-    global add_task
-
-    bot.send_message(my_chat_id, "Какая задача?")
-    add_task = True
+    prepare_to_add_a_task()
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "-2") # If delete button was pressed
@@ -131,8 +128,31 @@ def done_callback(call):
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "-4") # If occas button was pressed
-def test_callback(call):
+def test_callback(call):    
     show_list(call.message)
+
+
+def prepare_to_add_a_task(task=""):
+    global should_add_task
+
+    if (task == ""):
+        bot.send_message(my_chat_id, "Какая задача?")
+        should_add_task = True
+    else:
+        add_task(task)
+
+def add_task(task):
+    global should_add_task
+    
+    if len(task) <= 10000 and len(tasks) <= 10000:  # In case not to store big files
+        task.append(task)
+        bot.send_message(my_chat_id, "Добавил " + task)
+        # show_list(message)
+
+        should_add_task = 0
+        pickle.dump(tasks, open("./secure/tasks", "wb"))
+    else:
+        bot.send_message(my_chat_id, "Хорош меня дудосить :(")
 
 def main():
     bot.polling()
