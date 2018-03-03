@@ -103,37 +103,47 @@ def add_callback(call):
 def remove_callback(call):
     global tasks
 
-    bot.send_message(my_chat_id, "Удалил " + tasks[delete_task_id])
+    text = "Удалил " + tasks[delete_task_id]
     tasks.remove(tasks[delete_task_id])
-    show_list(should_edit_message=True, call=call)
+    show_list(should_edit_message=True, text=text, call=call)
 
     pickle.dump(tasks, open("./secure/tasks", "wb"))
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "-3") # If done button was pressed
 def done_callback(call):
-    bot.send_message(my_chat_id, random.choice(did_well_reply)) # Say sth nice
+    if len(tasks) > 1:
+        bot.edit_message_text(random.choice(did_well_reply),
+                              chat_id=my_chat_id,
+                              message_id=call.message.message_id,
+                              inline_message_id=call.inline_message_id) # Say sth nice
+        tasks.remove(tasks[delete_task_id]) # Delete the task
+        show_list()
+    else:
+        tasks.remove(tasks[delete_task_id]) # Same
+        show_list(should_edit_message=True, call=call)
 
-    remove_callback(call) # Delete the task
-
+    pickle.dump(tasks, open("./secure/tasks", "wb"))
 
 @bot.callback_query_handler(func=lambda call: call.data == "-4") # If occas button was pressed
 def test_callback(call):    
     show_list(should_edit_message=True, call=call)
 
 
-def show_list(should_edit_message=False, call=None):
+def show_list(should_edit_message=False, text="", call=None):
     markup = types.InlineKeyboardMarkup(row_width=1)  # Building keyboard with tasks
     for i in range(len(tasks)):
         markup.add(types.InlineKeyboardButton(str(i + 1) + ". " + tasks[i], callback_data=str(i)))
     markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="-1"))
 
-    if len(tasks) == 0:  # Choosing text
-        text = "Упс, ты молодец, у тебя нет задач :)"
-    else:
-        text = "Лови список задач!"
+    if text == "":
+        if len(tasks) == 0:  # Choosing text
+            text = "Упс, ты молодец, у тебя нет задач :)"
+        else:
+            text = "Лови список задач!"
+
     if should_edit_message:
-        bot.edit_message_reply_markup(chat_id=my_chat_id, message_id=call.message.message_id,
+        bot.edit_message_text(text, chat_id=my_chat_id, message_id=call.message.message_id,
                                       inline_message_id=call.inline_message_id, reply_markup=markup)
     else:
         bot.send_message(my_chat_id, text, reply_markup=markup)
