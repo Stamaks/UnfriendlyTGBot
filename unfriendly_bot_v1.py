@@ -40,18 +40,8 @@ def send_welcome(message):
 
 
 @bot.message_handler(commands=['list'])
-def show_list(message):
-
-    markup = types.InlineKeyboardMarkup(row_width=1) # Building keyboard with tasks
-    for i in range(len(tasks)):
-        markup.add(types.InlineKeyboardButton(str(i+1) + ". " + tasks[i], callback_data=str(i)))
-    markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="-1"))
-
-    if len(tasks) == 0: # Choosing text
-        text = "Упс, ты молодец, у тебя нет задач :)"
-    else:
-        text = "Лови список задач!"
-    bot.send_message(my_chat_id, text, reply_markup=markup)
+def list_cammand_handler(message):
+    show_list()
 
 @bot.message_handler(commands=['add'])
 def list_command_handler(message):
@@ -69,7 +59,7 @@ def echo_all(message):
     global should_add_task, is_previous_message_greet_question
 
     if should_add_task:
-        add_task(message.text)
+        add_task(message.text, should_show_list=True)
 
     elif is_previous_message_greet_question:
 
@@ -87,7 +77,7 @@ def echo_all(message):
 
     else:
         bot.send_message(my_chat_id, "Ничонипонял")
-        show_list(message) # show task list
+        show_list() # show task list
 
 
 @bot.callback_query_handler(func=lambda call: int(call.data) >= 0) # If task button was presses
@@ -115,7 +105,7 @@ def remove_callback(call):
 
     bot.send_message(my_chat_id, "Удалил " + tasks[delete_task_id])
     tasks.remove(tasks[delete_task_id])
-    show_list(call.message)
+    show_list(should_edit_message=True, call=call)
 
     pickle.dump(tasks, open("./secure/tasks", "wb"))
 
@@ -129,7 +119,24 @@ def done_callback(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "-4") # If occas button was pressed
 def test_callback(call):    
-    show_list(call.message)
+    show_list(should_edit_message=True, call=call)
+
+
+def show_list(should_edit_message=False, call=None):
+    markup = types.InlineKeyboardMarkup(row_width=1)  # Building keyboard with tasks
+    for i in range(len(tasks)):
+        markup.add(types.InlineKeyboardButton(str(i + 1) + ". " + tasks[i], callback_data=str(i)))
+    markup.add(types.InlineKeyboardButton("Добавить задачу", callback_data="-1"))
+
+    if len(tasks) == 0:  # Choosing text
+        text = "Упс, ты молодец, у тебя нет задач :)"
+    else:
+        text = "Лови список задач!"
+    if should_edit_message:
+        bot.edit_message_reply_markup(chat_id=my_chat_id, message_id=call.message.message_id,
+                                      inline_message_id=call.inline_message_id, reply_markup=markup)
+    else:
+        bot.send_message(my_chat_id, text, reply_markup=markup)
 
 
 def prepare_to_add_a_task(task=""):
@@ -141,18 +148,22 @@ def prepare_to_add_a_task(task=""):
     else:
         add_task(task)
 
-def add_task(task):
+
+def add_task(task, should_show_list=False):
     global should_add_task
-    
+
     if len(task) <= 10000 and len(tasks) <= 10000:  # In case not to store big files
-        task.append(task)
+        tasks.append(task)
         bot.send_message(my_chat_id, "Добавил " + task)
-        # show_list(message)
+
+        if should_show_list:
+            show_list()
 
         should_add_task = 0
         pickle.dump(tasks, open("./secure/tasks", "wb"))
     else:
         bot.send_message(my_chat_id, "Хорош меня дудосить :(")
+
 
 def main():
     bot.polling()
